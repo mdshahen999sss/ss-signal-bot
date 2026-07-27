@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SS Signal App - Professional Market Analysis</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <h1>📊 SS SIGNAL APP</h1>
+      <p class="subtitle">Real-time Technical Analysis & Decision Support</p>
+    </header>
+
+    <div class="controls-card">
+      <div class="control-group">
+        <label>Market Asset</label>
+        <select id="symbolSelect">
+          <option value="EUR/USD">EUR/USD</option>
+          <option value="GBP/USD">GBP/USD</option>
+          <option value="USD/JPY">USD/JPY</option>
+          <option value="AUD/USD">AUD/USD</option>
+          <option value="USD/CAD">USD/CAD</option>
+          <option value="USD/CHF">USD/CHF</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Timeframe</label>
+        <select id="intervalSelect">
+          <option value="1min">1 Minute</option>
+          <option value="5min">5 Minutes</option>
+          <option value="15min">15 Minutes</option>
+        </select>
+      </div>
+
+      <button id="generateBtn" onclick="fetchSignal()">🚀 Generate Signal</button>
+    </div>
+
+    <!-- Main Signal Card -->
+    <div class="signal-card" id="signalCard">
+      <div class="card-header">
+        <span id="marketBadge">EUR/USD • 1 Min</span>
+        <span>Candle Time: <b id="candleTime" style="color:#fff;">--:--:--</b></span>
+      </div>
+
+      <div class="decision-box" id="decisionBox">
+        <div class="decision-text" id="decisionText">LOADING...</div>
+        <div class="entry-time-banner">
+          ⏱ ENTRY FOR NEXT CANDLE: <span id="entryTime">--:--:--</span>
+        </div>
+        <div class="confidence-bar-container">
+          <div class="confidence-label">Strategy Score: <span id="confidenceValue">0%</span></div>
+          <div class="progress-bar"><div class="progress" id="progressBar"></div></div>
+        </div>
+      </div>
+
+      <div class="price-strip">
+        <div><span>Open:</span> <b id="pOpen">-</b></div>
+        <div><span>High:</span> <b id="pHigh">-</b></div>
+        <div><span>Low:</span> <b id="pLow">-</b></div>
+        <div><span>Close:</span> <b id="pClose">-</b></div>
+      </div>
+    </div>
+
+    <!-- Indicator Breakdown Grid -->
+    <h3 class="section-title">🤖 AI Technical Analysis</h3>
+    <div class="indicator-grid">
+      <div class="ind-card"><span>Price Action</span><b id="indPriceAction" style="color:#38ef7d;">-</b></div>
+      <div class="ind-card"><span>EMA Trend</span><b id="indEma">-</b></div>
+      <div class="ind-card"><span>RSI (14)</span><b id="indRsi">-</b></div>
+      <div class="ind-card"><span>MACD</span><b id="indMacd">-</b></div>
+      <div class="ind-card"><span>Fractal Structure</span><b id="indFractal">-</b></div>
+      <div class="ind-card"><span>Volume</span><b id="indVolume">-</b></div>
+    </div>
+
+    <!-- History Section -->
+    <h3 class="section-title">📜 Signal History</h3>
+    <div class="history-table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Next Entry</th>
+            <th>Signal</th>
+            <th>Score</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody id="historyTableBody">
+          <tr><td colspan="5" style="text-align:center;">No signals generated yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
