@@ -3,96 +3,132 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SS Signal App - Professional Market Analysis</title>
-  <link rel="stylesheet" href="style.css">
+  <title>SS Trading AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #0b0f19; color: #ffffff; padding: 15px; display: flex; justify-content: center; }
+    .container { width: 100%; max-width: 480px; }
+    
+    header { text-align: center; margin-bottom: 20px; }
+    header h1 { font-size: 24px; color: #38bdf8; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    header p { font-size: 12px; color: #94a3b8; margin-top: 5px; }
+    .badge { display: inline-block; background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid #22c55e; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-top: 8px; }
+
+    .card { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #334155; }
+    .form-group { margin-bottom: 12px; }
+    label { font-size: 11px; color: #64748b; font-weight: bold; display: block; margin-bottom: 4px; }
+    select { width: 100%; background: #0f172a; color: #fff; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 14px; outline: none; }
+
+    .btn-submit { width: 100%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-submit:active { transform: scale(0.98); }
+
+    .signal-card { border: 1px solid #f59e0b; text-align: center; position: relative; }
+    .signal-status { font-size: 11px; color: #94a3b8; margin-bottom: 5px; }
+    .signal-box { font-size: 32px; font-weight: 900; margin: 10px 0; }
+    .BUY { color: #22c55e; }
+    .SELL { color: #ef4444; }
+    .NEUTRAL, .WAIT { color: #eab308; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .stat-box { background: #0f172a; padding: 8px; border-radius: 6px; text-align: center; }
+    .stat-label { font-size: 10px; color: #64748b; }
+    .stat-val { font-size: 12px; font-weight: bold; margin-top: 2px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+    th, td { text-align: center; padding: 8px; border-bottom: 1px solid #334155; }
+    th { color: #64748b; font-size: 10px; }
+  </style>
 </head>
 <body>
-  <div class="app-container">
-    <header class="header">
-      <h1>📊 SS SIGNAL APP</h1>
-      <p class="subtitle">Real-time Technical Analysis & Decision Support</p>
+
+  <div class="container">
+    <header>
+      <h1>📊 SS Trading AI</h1>
+      <p>Real-Time AI Trading Signals & Market Analysis</p>
+      <div class="badge">🟢 LIVE ANALYSIS</div>
     </header>
 
-    <div class="controls-card">
-      <div class="control-group">
-        <label>Market Asset</label>
-        <select id="symbolSelect">
-          <option value="EUR/USD">EUR/USD</option>
-          <option value="GBP/USD">GBP/USD</option>
-          <option value="USD/JPY">USD/JPY</option>
-          <option value="AUD/USD">AUD/USD</option>
-          <option value="USD/CAD">USD/CAD</option>
-          <option value="USD/CHF">USD/CHF</option>
-        </select>
+    <div class="card">
+      <div class="form-group">
+        <label>BROKER</label>
+        <select id="broker"><option>Quotex</option></select>
       </div>
 
-      <div class="control-group">
-        <label>Timeframe</label>
-        <select id="intervalSelect">
-          <option value="1min">1 Minute</option>
-          <option value="5min">5 Minutes</option>
-          <option value="15min">15 Minutes</option>
-        </select>
-      </div>
-
-      <button id="generateBtn" onclick="fetchSignal()">🚀 Generate Signal</button>
-    </div>
-
-    <!-- Main Signal Card -->
-    <div class="signal-card" id="signalCard">
-      <div class="card-header">
-        <span id="marketBadge">EUR/USD • 1 Min</span>
-        <span>Candle Time: <b id="candleTime" style="color:#fff;">--:--:--</b></span>
-      </div>
-
-      <div class="decision-box" id="decisionBox">
-        <div class="decision-text" id="decisionText">LOADING...</div>
-        <div class="entry-time-banner">
-          ⏱ ENTRY FOR NEXT CANDLE: <span id="entryTime">--:--:--</span>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>MARKET ASSET</label>
+          <select id="asset">
+            <option value="EUR/USD">EUR/USD</option>
+            <option value="GBP/USD">GBP/USD</option>
+            <option value="USD/JPY">USD/JPY</option>
+            <option value="AUD/USD">AUD/USD</option>
+          </select>
         </div>
-        <div class="confidence-bar-container">
-          <div class="confidence-label">Strategy Score: <span id="confidenceValue">0%</span></div>
-          <div class="progress-bar"><div class="progress" id="progressBar"></div></div>
+        <div class="form-group">
+          <label>TIMEFRAME</label>
+          <select id="timeframe">
+            <option value="1m">1 Minute</option>
+            <option value="5m">5 Minutes</option>
+          </select>
         </div>
       </div>
 
-      <div class="price-strip">
-        <div><span>Open:</span> <b id="pOpen">-</b></div>
-        <div><span>High:</span> <b id="pHigh">-</b></div>
-        <div><span>Low:</span> <b id="pLow">-</b></div>
-        <div><span>Close:</span> <b id="pClose">-</b></div>
+      <button id="generateBtn" class="btn-submit" onclick="generateSignal()">⚡ Get Signal ⭐</button>
+    </div>
+
+    <div class="card signal-card">
+      <div class="signal-status">🔒 Active Analysis Mode</div>
+      <div id="signalText" class="signal-box WAIT">WAIT</div>
+      <div style="font-size:12px; color:#94a3b8;">Awaiting Analysis</div>
+      <div style="font-size:14px; margin-top:8px;">Candle Confirmation: <b id="confidenceVal">0%</b></div>
+
+      <div class="grid-2" style="margin-top:15px;">
+        <div class="stat-box">
+          <div class="stat-label">⏰ ENTRY TIME</div>
+          <div id="entryTime" class="stat-val">--:--:--</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">⏳ TIMER</div>
+          <div id="countdown" class="stat-val" style="color:#38bdf8;">00:00</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:8px;">
+        <div class="stat-box"><div class="stat-label">Open</div><div id="openVal" class="stat-val">0.00000</div></div>
+        <div class="stat-box"><div class="stat-label">High</div><div id="highVal" class="stat-val">0.00000</div></div>
+        <div class="stat-box"><div class="stat-label">Low</div><div id="lowVal" class="stat-val">0.00000</div></div>
+        <div class="stat-box"><div class="stat-label">Close</div><div id="closeVal" class="stat-val">0.00000</div></div>
       </div>
     </div>
 
-    <!-- Indicator Breakdown Grid -->
-    <h3 class="section-title">🤖 AI Technical Analysis</h3>
-    <div class="indicator-grid">
-      <div class="ind-card"><span>Price Action</span><b id="indPriceAction" style="color:#38ef7d;">-</b></div>
-      <div class="ind-card"><span>EMA Trend</span><b id="indEma">-</b></div>
-      <div class="ind-card"><span>RSI (14)</span><b id="indRsi">-</b></div>
-      <div class="ind-card"><span>MACD</span><b id="indMacd">-</b></div>
-      <div class="ind-card"><span>Fractal Structure</span><b id="indFractal">-</b></div>
-      <div class="ind-card"><span>Volume</span><b id="indVolume">-</b></div>
+    <div class="card">
+      <h3 style="font-size:14px; margin-bottom:10px;">🤖 AI Technical Analysis</h3>
+      <div class="grid-2">
+        <div class="stat-box"><div class="stat-label">PRICE ACTION</div><div id="paVal" class="stat-val">Awaiting Data</div></div>
+        <div class="stat-box"><div class="stat-label">EMA TREND</div><div id="emaVal" class="stat-val">Awaiting Data</div></div>
+        <div class="stat-box"><div class="stat-label">RSI (14)</div><div id="rsiVal" class="stat-val">Awaiting Data</div></div>
+        <div class="stat-box"><div class="stat-label">MACD</div><div id="macdVal" class="stat-val">Awaiting Data</div></div>
+      </div>
+      <div style="margin-top:8px;" class="stat-box"><div class="stat-label">DATA SOURCE</div><div id="sourceVal" class="stat-val">-</div></div>
     </div>
 
-    <!-- History Section -->
-    <h3 class="section-title">📜 Signal History</h3>
-    <div class="history-table-wrapper">
+    <div class="card">
+      <h3 style="font-size:14px; margin-bottom:8px;">📜 Signal History</h3>
       <table>
         <thead>
           <tr>
             <th>Time</th>
-            <th>Next Entry</th>
+            <th>Asset</th>
             <th>Signal</th>
-            <th>Score</th>
             <th>Price</th>
+            <th>Conf.</th>
           </tr>
         </thead>
-        <tbody id="historyTableBody">
-          <tr><td colspan="5" style="text-align:center;">No signals generated yet.</td></tr>
+        <tbody id="historyBody">
         </tbody>
       </table>
     </div>
+
   </div>
 
   <script src="app.js"></script>

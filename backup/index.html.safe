@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SS SIGNAL APP</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0b101d; color: #fff; margin: 0; padding: 15px; }
+        .container { max-width: 480px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 15px; }
+        .header h1 { color: #00e676; margin: 0; font-size: 22px; }
+        .header p { color: #8899a6; font-size: 12px; margin-top: 4px; }
+        
+        .controls { background: #151c2c; padding: 12px; border-radius: 10px; display: flex; gap: 10px; margin-bottom: 15px; }
+        .select-box { flex: 1; }
+        .select-box label { display: block; font-size: 11px; color: #8899a6; margin-bottom: 4px; }
+        select { width: 100%; background: #0b101d; color: #fff; border: 1px solid #2a384c; padding: 8px; border-radius: 6px; outline: none; }
+        
+        .card { background: #151c2c; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #2a384c; }
+        .card-top { display: flex; justify-content: space-between; font-size: 12px; color: #8899a6; margin-bottom: 10px; }
+        
+        .signal-display { border: 2px solid #f5a623; border-radius: 10px; padding: 20px; text-align: center; background: #0b101d; margin-bottom: 15px; }
+        .entry-box { border: 1px dashed #00e676; border-radius: 8px; padding: 10px; text-align: center; color: #00e676; font-weight: bold; font-size: 13px; margin-bottom: 10px; }
+        
+        .progress-container { margin-bottom: 15px; }
+        .progress-info { display: flex; justify-content: space-between; font-size: 11px; color: #8899a6; margin-bottom: 4px; }
+        .progress-bar { background: #2a384c; height: 6px; border-radius: 3px; overflow: hidden; }
+        .progress-fill { background: #00e676; height: 100%; width: 0%; transition: width 0.3s; }
+        
+        .ohlc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; background: #0b101d; padding: 8px; border-radius: 6px; text-align: center; font-size: 11px; }
+        .ohlc-grid div span { display: block; color: #8899a6; font-size: 10px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .info-item { background: #0b101d; padding: 10px; border-radius: 6px; border: 1px solid #2a384c; }
+        .info-item .title { font-size: 10px; color: #8899a6; }
+        .info-item .val { font-size: 12px; font-weight: bold; margin-top: 4px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }
+        th { color: #8899a6; border-bottom: 1px solid #2a384c; padding: 6px; }
+        td { padding: 8px 4px; border-bottom: 1px solid #1a2332; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 SS SIGNAL APP</h1>
+            <p>Real-time Technical Analysis & Decision Support</p>
+        </div>
+
+        <div class="controls">
+            <div class="select-box">
+                <label>Market Asset</label>
+                <select id="assetSelect" onchange="fetchSignalData()">
+                    <option value="EUR/USD">EUR/USD</option>
+                    <option value="GBP/USD">GBP/USD</option>
+                    <option value="USD/JPY">USD/JPY</option>
+                    <option value="AUD/USD">AUD/USD</option>
+                    <option value="USD/CAD">USD/CAD</option>
+                </select>
+            </div>
+            <div class="select-box">
+                <label>Timeframe</label>
+                <select id="tfSelect">
+                    <option value="1m">1 Minute</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-top">
+                <strong id="assetName">EUR/USD</strong>
+                <span id="candleTime">Candle Time: --:--:--</span>
+            </div>
+
+            <div class="signal-display" id="signalBox">
+                <h2 style="color: #ffb300; margin: 0; font-size: 22px;">⏳ MARKET NEUTRAL / WAIT</h2>
+            </div>
+
+            <div class="entry-box" id="entryTime">
+                ⏰ ENTRY FOR NEXT CANDLE: --:--:--
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span id="candleTimer">⏳ Next Candle in: 00:00s</span>
+                    <span id="confirmPercent">Candle Confirmation: 0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="ohlc-grid">
+                <div><span>Open:</span><b id="valOpen">-</b></div>
+                <div><span>High:</span><b id="valHigh">-</b></div>
+                <div><span>Low:</span><b id="valLow">-</b></div>
+                <div><span>Close:</span><b id="valClose">-</b></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #00e676;">🤖 AI Technical Analysis</div>
+            <div class="grid-2">
+                <div class="info-item"><div class="title">Price Action</div><div class="val" id="valPA" style="color:#00e676;">-</div></div>
+                <div class="info-item"><div class="title">EMA Trend</div><div class="val" id="valEMA">-</div></div>
+                <div class="info-item"><div class="title">RSI (14)</div><div class="val" id="valRSI">-</div></div>
+                <div class="info-item"><div class="title">MACD</div><div class="val" id="valMACD">-</div></div>
+                <div class="info-item"><div class="title">Fractal Structure</div><div class="val" id="valFractal">-</div></div>
+                <div class="info-item"><div class="title">Volume</div><div class="val" id="valVolume">-</div></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #00e676;">📜 Signal History</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Entry</th>
+                        <th>Signal</th>
+                        <th>Score</th>
+                        <th>Price</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    <tr><td colspan="6">Loading history...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

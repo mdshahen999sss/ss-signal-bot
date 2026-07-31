@@ -1,0 +1,95 @@
+async function fetchSignalData() {
+    const assetSelect = document.getElementById('assetSelect');
+    const symbol = assetSelect ? assetSelect.value : 'EUR/USD';
+
+    try {
+        const res = await fetch(`/api/signal?symbol=${encodeURIComponent(symbol)}`);
+        const data = await res.json();
+
+        if (data && data.current) {
+            updateUI(data.current);
+            updateHistoryTable(data.history);
+        }
+    } catch (err) {
+        console.error("Fetch Error:", err);
+    }
+}
+
+function updateUI(curr) {
+    if (document.getElementById('assetName')) document.getElementById('assetName').innerText = curr.symbol;
+    if (document.getElementById('candleTime')) document.getElementById('candleTime').innerText = `Candle Time: ${curr.candleTime}`;
+    if (document.getElementById('entryTime')) document.getElementById('entryTime').innerText = `⏰ ENTRY FOR NEXT CANDLE: ${curr.entryTime}`;
+    
+    if (document.getElementById('valOpen')) document.getElementById('valOpen').innerText = curr.open;
+    if (document.getElementById('valHigh')) document.getElementById('valHigh').innerText = curr.high;
+    if (document.getElementById('valLow')) document.getElementById('valLow').innerText = curr.low;
+    if (document.getElementById('valClose')) document.getElementById('valClose').innerText = curr.close;
+
+    if (document.getElementById('valPA')) document.getElementById('valPA').innerText = curr.indicators.priceAction;
+    if (document.getElementById('valEMA')) document.getElementById('valEMA').innerText = curr.indicators.ema;
+    if (document.getElementById('valRSI')) document.getElementById('valRSI').innerText = curr.indicators.rsi;
+    if (document.getElementById('valMACD')) document.getElementById('valMACD').innerText = curr.indicators.macd;
+    if (document.getElementById('valFractal')) document.getElementById('valFractal').innerText = curr.indicators.fractal;
+    if (document.getElementById('valVolume')) document.getElementById('valVolume').innerText = curr.indicators.volume;
+
+    const signalBox = document.getElementById('signalBox');
+    if (signalBox) {
+        if (curr.signal === 'UP') {
+            signalBox.style.borderColor = '#00e676';
+            signalBox.innerHTML = `<h2 style="color: #00e676; font-size: 26px; margin:0;">🚀 BUY / CALL (UP)</h2><p style="margin:5px 0 0 0; color:#aaa; font-size:12px;">Score: ${curr.scoreCategory} (${curr.confidence}%)</p>`;
+        } else if (curr.signal === 'DOWN') {
+            signalBox.style.borderColor = '#ff5252';
+            signalBox.innerHTML = `<h2 style="color: #ff5252; font-size: 26px; margin:0;">🔻 SELL / PUT (DOWN)</h2><p style="margin:5px 0 0 0; color:#aaa; font-size:12px;">Score: ${curr.scoreCategory} (${curr.confidence}%)</p>`;
+        } else {
+            signalBox.style.borderColor = '#f5a623';
+            signalBox.innerHTML = `<h2 style="color: #ffb300; font-size: 22px; margin:0;">⏳ MARKET NEUTRAL / WAIT</h2>`;
+        }
+    }
+}
+
+function updateHistoryTable(history) {
+    const tbody = document.getElementById('historyBody');
+    if (!tbody || !history) return;
+
+    if (history.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:15px; color:#8899a6;">No signals generated yet.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = history.map(item => {
+        let resColor = '#ffb300';
+        if (item.result === 'WIN') resColor = '#00e676';
+        if (item.result === 'LOSS') resColor = '#ff5252';
+
+        return `
+            <tr>
+                <td>${item.timestamp}</td>
+                <td>${item.nextEntry}</td>
+                <td style="color:${item.signal === 'UP' ? '#00e676' : (item.signal === 'DOWN' ? '#ff5252' : '#ffb300')}; font-weight:bold;">${item.signal}</td>
+                <td>${item.confidence}%</td>
+                <td>${item.price}</td>
+                <td style="color:${resColor}; font-weight:bold;">${item.result}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Live Countdown Timer and Progress Bar
+setInterval(() => {
+    const now = new Date();
+    const sec = now.getSeconds();
+    const remainingSec = 60 - sec;
+    const percent = Math.floor((sec / 60) * 100);
+
+    const timerElem = document.getElementById('candleTimer');
+    const percentElem = document.getElementById('confirmPercent');
+    const fillElem = document.getElementById('progressFill');
+
+    if (timerElem) timerElem.innerText = `⏳ Next Candle in: 00:${remainingSec < 10 ? '0' + remainingSec : remainingSec}s`;
+    if (percentElem) percentElem.innerText = `Candle Confirmation: ${percent}%`;
+    if (fillElem) fillElem.style.width = `${percent}%`;
+}, 1000);
+
+// Fetch data every 2 seconds
+setInterval(fetchSignalData, 2000);
+fetchSignalData();

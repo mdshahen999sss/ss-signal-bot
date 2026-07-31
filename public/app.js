@@ -1,77 +1,131 @@
-async function fetchSignal() {
-  const symbol = document.getElementById("symbolSelect").value;
-  const interval = document.getElementById("intervalSelect").value;
-  const btn = document.getElementById("generateBtn");
+let countdownInterval = null;
 
-  btn.innerText = "⏳ Analyzing Market...";
-  btn.disabled = true;
+async function generateSignal() {
+  const assetSelect = document.getElementById('asset');
+  const timeframeSelect = document.getElementById('timeframe');
+  const btn = document.getElementById('generateBtn') || document.querySelector('button');
+
+  const asset = assetSelect ? assetSelect.value : 'EUR/USD';
+  const timeframe = timeframeSelect ? timeframeSelect.value : '1m';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "Analyzing Market...";
+  }
 
   try {
-    const res = await fetch(`/api/signal?symbol=${encodeURIComponent(symbol)}&interval=${interval}`);
-    const data = await res.json();
+    const res = await fetch(`/api/analyze?asset=${encodeURIComponent(asset)}&timeframe=${timeframe}`);
+    const result = await res.json();
 
-    if (data.error) {
-      alert("API Error: " + data.error);
+    if (!result.success) {
+      alert("Error fetching signal: " + (result.error || "Unknown error"));
       return;
     }
 
-    const cur = data.current;
+    const data = result.data;
 
-    // Update Header & Price
-    document.getElementById("marketBadge").innerText = `${cur.symbol} • ${cur.interval}`;
-    document.getElementById("candleTime").innerText = cur.timestamp;
-    document.getElementById("entryTime").innerText = cur.nextEntryTime;
+    // UI Elements Update with REAL Data
+    const signalText = document.getElementById('signalText') || document.getElementById('taSignal');
+    if (signalText) {
+      signalText.innerText = data.signal;
+      signalText.className = data.signal;
+    }
 
-    document.getElementById("pOpen").innerText = cur.price.open;
-    document.getElementById("pHigh").innerText = cur.price.high;
-    document.getElementById("pLow").innerText = cur.price.low;
-    document.getElementById("pClose").innerText = cur.price.close;
+    const confidenceVal = document.getElementById('confidenceVal') || document.getElementById('taScore');
+    if (confidenceVal) {
+      confidenceVal.innerText = data.confidenceScore + '%';
+    }
 
-    // Update Signal Decision
-    const decBox = document.getElementById("decisionText");
-    decBox.innerText = cur.signal;
-    decBox.className = "decision-text " + cur.signal;
+    const entryTime = document.getElementById('entryTime');
+    if (entryTime) {
+      entryTime.innerText = new Date(data.entryTime).toLocaleTimeString();
+    }
 
-    // Progress Bar
-    document.getElementById("confidenceValue").innerText = `${cur.confidence}/100`;
-    document.getElementById("progressBar").style.width = `${cur.confidence}%`;
+    // Countdown Timer Start
+    const timeframeMinutes = parseInt(timeframe) || 1;
+    startCountdown(timeframeMinutes);
 
-    // Indicators Breakdown
-    document.getElementById("indPriceAction").innerText = cur.breakdown.priceAction;
-    document.getElementById("indEma").innerText = cur.breakdown.ema;
-    document.getElementById("indRsi").innerText = cur.breakdown.rsi;
-    document.getElementById("indMacd").innerText = cur.breakdown.macd;
-    document.getElementById("indFractal").innerText = cur.breakdown.fractal;
-    document.getElementById("indVolume").innerText = cur.breakdown.volume;
+    // OHLC Update
+    if (document.getElementById('openVal')) document.getElementById('openVal').innerText = data.ohlc.open;
+    if (document.getElementById('highVal')) document.getElementById('highVal').innerText = data.ohlc.high;
+    if (document.getElementById('lowVal')) document.getElementById('lowVal').innerText = data.ohlc.low;
+    if (document.getElementById('closeVal')) document.getElementById('closeVal').innerText = data.ohlc.close;
 
-    // History Table
-    renderHistory(data.history);
+    // Technical Indicators Update
+    if (document.getElementById('emaVal')) document.getElementById('emaVal').innerText = `${data.indicators.ema20 || '-'} / ${data.indicators.ema50 || '-'}`;
+    if (document.getElementById('rsiVal') || document.getElementById('taRSI')) {
+      const rsiEl = document.getElementById('rsiVal') || document.getElementById('taRSI');
+      rsiEl.innerText = data.indicators.rsi || '-';
+    }
+    if (document.getElementById('macdVal') || document.getElementById('taMACD')) {
+      const macdEl = document.getElementById('macdVal') || document.getElementById('taMACD');
+      macdEl.innerText = data.indicators.macd || '-';
+    }
+    if (document.getElementById('paVal') || document.getElementById('taPA')) {
+      const paEl = document.getElementById('paVal') || document.getElementById('taPA');
+      paEl.innerText = data.indicators.priceAction;
+    }
+    if (document.getElementById('fractalVal') || document.getElementById('taFractal')) {
+      const fracEl = document.getElementById('fractalVal') || document.getElementById('taFractal');
+      fracEl.innerText = data.indicators.fractalStructure;
+    }
+    if (document.getElementById('sourceVal')) {
+      document.getElementById('sourceVal').innerText = data.dataSource;
+    }
+
+    // Render Real History
+    if (result.history) {
+      renderHistory(result.history);
+    }
 
   } catch (err) {
     console.error("Fetch Error:", err);
+    alert("Connection error with server.");
   } finally {
-    btn.innerText = "🚀 Generate Signal";
-    btn.disabled = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "⚡ Get Signal ⭐";
+    }
   }
 }
 
-function renderHistory(history) {
-  const tbody = document.getElementById("historyTableBody");
-  if (!history || history.length === 0) return;
+function startCountdown(durationMinutes) {
+  if (countdownInterval) clearInterval(countdownInterval);
 
-  tbody.innerHTML = history.map(item => `
-    <tr>
-      <td>${item.timestamp}</td>
-      <td style="color:#38ef7d; font-weight:bold;">${item.nextEntryTime}</td>
-      <td class="${item.signal}"><b>${item.signal}</b></td>
-      <td>${item.confidence}/100</td>
-      <td>${item.price}</td>
-    </tr>
-  `).join('');
+  let secondsLeft = durationMinutes * 60;
+  const countdownEl = document.getElementById('countdown') || document.getElementById('taTimer');
+
+  if (!countdownEl) return;
+
+  countdownInterval = setInterval(() => {
+    const mins = Math.floor(secondsLeft / 60);
+    const secs = secondsLeft % 60;
+
+    countdownEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+    if (secondsLeft <= 0) {
+      clearInterval(countdownInterval);
+      countdownEl.innerText = "EXPIRED";
+    }
+    secondsLeft--;
+  }, 1000);
 }
 
-// Initial Auto Fetch
-fetchSignal();
+function renderHistory(history) {
+  const tbody = document.getElementById('historyBody') || document.getElementById('historyTableBody');
+  if (!tbody) return;
 
-// Auto refresh frontend every 60 seconds
-setInterval(fetchSignal, 60000);
+  tbody.innerHTML = '';
+
+  history.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${item.time}</td>
+      <td>${item.asset}</td>
+      <td style="color:${item.signal === 'BUY' ? '#22c55e' : (item.signal === 'SELL' ? '#ef4444' : '#fff')}; font-weight:bold;">${item.signal}</td>
+      <td>${item.price}</td>
+      <td>${item.confidence}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
