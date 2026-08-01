@@ -1,4 +1,7 @@
 const express = require('express');
+const connectDB = require('./src/config/db.js');
+connectDB();
+
 const dotenv = require('dotenv');
 const helmet = require('helmet');
 const cors = require('cors');
